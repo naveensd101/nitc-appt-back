@@ -6,7 +6,7 @@ DROP TABLE if exists Departments;
 DROP TABLE if exists Users;
 
 CREATE TABLE Users (
-  u_id serial primary key,
+  u_id text not null primary key,
   uname text not null,
   email text not null,
   pwd text not null,
@@ -15,20 +15,20 @@ CREATE TABLE Users (
 
 CREATE TABLE Departments (
 	department_id serial primary key,
-  dname text not null
+	dname text not null
 );
 
 CREATE TABLE Admin (
-	admin_id serial references Users(u_id)
+	admin_id text references Users(u_id)
 );
 
 CREATE TABLE Faculty (
-	ssn serial references Users(u_id) PRIMARY KEY,
+	ssn text references Users(u_id) PRIMARY KEY,
   deptid serial references Departments(department_id)
 );
 
 CREATE TABLE Student (
-	roll_no serial references Users(u_id) PRIMARY KEY, /* so this rollnumber is not your college rollnumber 
+	roll_no text references Users(u_id) PRIMARY KEY, /* so this rollnumber is not your college rollnumber 
   																				this is one that our database gives you */
   deptid serial references Departments(department_id)
 );
@@ -40,8 +40,8 @@ CREATE TABLE Appointments(
   date_scheduled text,
   title text,
 	decription text,
-  stu_id serial references Student(roll_no),
-	fac_id serial references Faculty(ssn),
+  stu_id text references Student(roll_no),
+	fac_id text references Faculty(ssn),
 	suggested_date text DEFAULT '-1',/*default -1 : */
 	faculty_message text 
 );
