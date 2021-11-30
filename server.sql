@@ -1,9 +1,9 @@
-DROP TABLE if exists Users;
-DROP TABLE if exists Departments;
-DROP TABLE if exists Admin;
+DROP TABLE if exists Appointments;
 DROP TABLE if exists Faculty;
 DROP TABLE if exists Student;
-DROP TABLE if exists Appointments;
+DROP TABLE if exists Admin;
+DROP TABLE if exists Departments;
+DROP TABLE if exists Users;
 
 CREATE TABLE Users (
   u_id serial primary key,
@@ -23,12 +23,12 @@ CREATE TABLE Admin (
 );
 
 CREATE TABLE Faculty (
-	ssn serial references Users(u_id),
-  depid serial references Departments(department_id)
+	ssn serial references Users(u_id) PRIMARY KEY,
+  deptid serial references Departments(department_id)
 );
 
 CREATE TABLE Student (
-	roll_no serial references Users(u_id), /* so this rollnumber is not your college rollnumber 
+	roll_no serial references Users(u_id) PRIMARY KEY, /* so this rollnumber is not your college rollnumber 
   																				this is one that our database gives you */
   deptid serial references Departments(department_id)
 );
@@ -40,8 +40,8 @@ CREATE TABLE Appointments(
   date_scheduled text,
   title text,
 	decription text,
-  stu_id serial references Student(roll_no) PRIMARY KEY,
-	fac_id serial references Faculty(ssn) PRIMARY KEY,
+  stu_id serial references Student(roll_no),
+	fac_id serial references Faculty(ssn),
 	suggested_date text DEFAULT '-1',/*default -1 : */
 	faculty_message text 
 );
