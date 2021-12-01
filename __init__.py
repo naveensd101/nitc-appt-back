@@ -184,7 +184,7 @@ def create_app():
             cursor = dbconn.cursor()
             cursor.execute("SELECT uname FROM Users WHERE u_id=%s",(i[0],))
             uname=cursor.fetchone()[0]
-            list_of_uname.append(uname)
+            list_of_uname.append({i[0]: uname})
             dbconn.commit()
 
         return jsonify(list_of_uname)
