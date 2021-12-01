@@ -189,6 +189,8 @@ def create_app():
 
         return jsonify(list_of_uname)
 
+#########################################################################################################################
+
     #@app.route("/details",methods=["POST"])
     @app.route("/details")
     def details():
@@ -204,6 +206,41 @@ def create_app():
 
 ########################################  STUDENT  ###############################################
 
+    #insert into the appointment table
+    #@app.route("/request_stud",methods=["POST"])
+    @app.route("/request_stud")
+    def request_stud():
+        #Details that we take in: date_created, date_appointment, time_appointment, title, description, stud_id, fac_id
+        cursor = dbconn.cursor()
+        date_created = "2020-12-30"
+        date_appointment = "2020-12-31"
+        time_appointment = "10:00:00"
+        title = "test2"
+        description = "second test description"
+        stud_id = "B190SDtestCS"
+        fac_id = "123444444"
+        #date_created= request.json['date_created']
+        #date_appointment= request.json['date_appointment']
+        #time_appointment= request.json['time_appointment']
+        #title= request.json['title']
+        #description= request.json['description']
+        #stud_id= request.json['stud_id']
+        #fac_id= request.json['fac_id']
+        dateTime = date_appointment + "#" + time_appointment
+        # we are concatinating the date and time to get the datetime
+        # because our database only has one column for datetime
+
+        #status will be 1 for pending
+        try:
+            cursor.execute("INSERT INTO Appointments (status, date_created, date_scheduled, title, decription, stu_id, fac_id) VALUES(%s, %s, %s, %s, %s, %s, %s)",("1", date_created, dateTime, title, description, stud_id, fac_id))
+        except:
+            return jsonify(message="Give correct values muthe")
+        dbconn.commit()
+
+        return jsonify(message="Appointment Requested")
+
+
+########################################  STUDENT OVER ###########################################
 
 
 
