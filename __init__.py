@@ -215,10 +215,10 @@ def create_app():
         date_created = "2020-12-30"
         date_appointment = "2020-12-31"
         time_appointment = "10:00:00"
-        title = "test2"
-        description = "second test description"
+        title = "test3"
+        description = "3rd test description"
         stud_id = "B190SDtestCS"
-        fac_id = "123444444"
+        fac_id = "123"
         #date_created= request.json['date_created']
         #date_appointment= request.json['date_appointment']
         #time_appointment= request.json['time_appointment']
@@ -240,7 +240,33 @@ def create_app():
         return jsonify(message="Appointment Requested")
 
 
-########################################  STUDENT OVER ###########################################
+########################################  STUDENT OVER  ##########################################
+
+########################################  FACULTY STUFF  #########################################
+    #api to view all appointment that the faculty has
+    #@app.route("/view_all_apt",methods=["POST"])
+    @app.route("/view_all_apt")
+    def view_all_apt():
+        # takes in the faculty id
+        #fac_id= request.json['fac_id']
+        fac_id="123asfa"
+        cursor = dbconn.cursor()
+        cursor.execute("SELECT * from Appointments where fac_id=%s",(fac_id,))
+        list_of_apt=cursor.fetchall()
+        dbconn.commit()
+        print(list_of_apt)
+        if not list_of_apt:
+            return jsonify(message="Lonely angel")
+
+        list_of_apt_details=[]
+        for i in list_of_apt:
+            aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
+            date_scheduled = dateTime.split("#")[0]
+            time_scheduled = dateTime.split("#")[1]
+            list_of_apt_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
+        return jsonify(list_of_apt_details)
+
+########################################  FACULTY STUFF OVER  ####################################
 
 
 
