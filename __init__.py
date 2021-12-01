@@ -189,6 +189,19 @@ def create_app():
 
         return jsonify(list_of_uname)
 
+    #@app.route("/details",methods=["POST"])
+    @app.route("/details")
+    def details():
+        cursor = dbconn.cursor()
+        u_id = "B190SDtestCS"
+        #u_id= request.json['u_id']
+        cursor.execute("SELECT * from Users where u_id=%s",(u_id,))
+        details=cursor.fetchone()
+        dbconn.commit()
+        u_id,names,emails,password,mobilenos=details
+        print(details)
+        return jsonify({"u_id":u_id,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos})
+
 ########################################  STUDENT  ###############################################
 
 
