@@ -67,7 +67,8 @@ def signinpage():
     typess= request.json['type']
 
     #password encryption:
-    password=hashlib.sha256(password.encode('utf-8')).hexdigest() #hashvalue
+    if typess!='admin':
+        password=hashlib.sha256(password.encode('utf-8')).hexdigest() #hashvalue
 
     cursor.execute("SELECT pwd from Users where u_id=%s",(uids,))
     x=cursor.fetchone()
@@ -80,6 +81,7 @@ def signinpage():
 
     if temp:
         passcode=temp
+        print(passcode,password)
         if passcode==password:
             if typess=='student':
                 cursor = dbconn.cursor()
@@ -118,8 +120,15 @@ def signinpage():
                 uids,names,emails,password,mobilenos=tempone
 
                 return jsonify({"u_id":uids,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos,"deptid":deptids,"dname":depts})
+                
+            elif typess=='admin':
+                cursor = dbconn.cursor()
+                cursor.execute("SELECT * from Users where u_id=%s",(uids,))
+                dbconn.commit()
+                tempone= cursor.fetchone()
+                uids,names,emails,password,mobilenos=tempone
 
-
+                return jsonify({"u_id":uids,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos})
         else:
                 return jsonify(message="Incorrect Password")
 
