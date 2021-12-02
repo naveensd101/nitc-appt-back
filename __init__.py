@@ -176,6 +176,7 @@ def registration():
 #########################################################################################################################
 #Gets the id and username of all the faculties
 @app.route("/list_all_fac",methods=["POST"])
+#@app.route("/list_all_fac")
 def listAllFacPage():
     cursor = dbconn.cursor()
     list_of_uname=[]
@@ -191,13 +192,10 @@ def listAllFacPage():
 #########################################################################################################################
 #Gets details of a specific user
 @app.route("/details",methods=["POST"])
+#@app.route("/details")
 def details():
-    """ {
-    "u_id":"123"
-    } """
     cursor = dbconn.cursor()
     uid= request.json['u_id']
-    #u_id= request.json['u_id']
     cursor.execute("SELECT * from Users where u_id=%s",(uid,))
     details=cursor.fetchone()
     dbconn.commit()
@@ -210,15 +208,15 @@ def details():
 @app.route("/request_stud",methods=["POST"])
 def request_stud():
     cursor = dbconn.cursor()
-    """ {
-    "date_created" : "2020-12-30",
-    "date_appointment" : "2020-12-31",
-    "time_appointment" : "10:00:00",
-    "title" : "test3",
-    "description" : "3rd test description",
-    "stud_id" : "B190SDtestCS",
-    "fac_id" : "123"
-    } """
+  		
+    #date_created = "2020-12-30"
+    #date_appointment = "2020-12-31"
+    #time_appointment = "10:00:00"
+    #title = "test3"
+    #description = "3rd exam description"
+    #stud_id = "B190SDtestCS"
+    #fac_id = "123"
+   
     date_created= request.json['date_created']
     date_appointment= request.json['date_appointment']
     time_appointment= request.json['time_appointment']
@@ -227,6 +225,8 @@ def request_stud():
     stud_id= request.json['stud_id']
     fac_id= request.json['fac_id']
     dateTime = date_appointment + "#" + time_appointment
+    
+    
     # we are concatinating the date and time to get the datetime
     # because our database only has one column for datetime
 
@@ -234,16 +234,20 @@ def request_stud():
     try:
         cursor.execute("INSERT INTO Appointments (status, date_created, date_scheduled, title, decription, stu_id, fac_id) VALUES(%s, %s, %s, %s, %s, %s, %s)",("1", date_created, dateTime, title, description, stud_id, fac_id))
     except:
-        return jsonify(message="Give correct values muthe")
+        return jsonify(message="Invalid appointment request")
     dbconn.commit()
 
     return jsonify(message="Appointment Requested")
 
+#########################################################################################################################
 #Deletes an appointment
 @app.route("/delete_appt",methods=["DELETE"])
+#@app.route("/delete_appt")
+
 def delete_appt():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
+    #appt_id='20'
     print("appt_id",appt_id)
     valid=-1
     cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id,))
@@ -257,43 +261,48 @@ def delete_appt():
     else:
         return jsonify(message="Error: appointment doesn't exist")
 
+#########################################################################################################################
 #Rejects an appointment
 @app.route("/reject_stud",methods=["POST"])
 def reject_stud():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
+    #appt_id='19'
     print("appt_id",appt_id)
     dbconn.commit()
     cursor.execute("UPDATE Appointments SET status='2' where appointment_id=%s",(appt_id,))
     dbconn.commit()
     return jsonify({"appt_id":appt_id,"status":2})
+    
+#########################################################################################################################    
 #Approves an appointment
-@app.route("/approval_stud",methods=["POST"])
+@app.route("/approval_stud")
 def approval_stud():
     cursor=dbconn.cursor()
-    appt_id=request.json["appt_id"]
+    #appt_id=request.json["appt_id"]
+    appt_id='19'
     print("appt_id",appt_id)
     cursor.execute("UPDATE Appointments SET status='3' WHERE appointment_id=%s ;",(appt_id,))
     dbconn.commit()
     return jsonify({"appt_id":appt_id,"status":3})
 
-########################################  STUDENT OVER  ##########################################
+
 
 ########################################  FACULTY STUFF  #########################################
 #api to view all appointment that the faculty has
-#@app.route("/view_all_apt",methods=["POST"])
-@app.route("/view_all_apt")
+@app.route("/view_all_apt",methods=["POST"])
+#@app.route("/view_all_apt")
 def view_all_apt():
     # takes in the faculty id
-    #fac_id= request.json['fac_id']
-    fac_id="123asfa"
+    fac_id= request.json['fac_id']
+    #fac_id="123asfa"
     cursor = dbconn.cursor()
     cursor.execute("SELECT * from Appointments where fac_id=%s",(fac_id,))
     list_of_apt=cursor.fetchall()
     dbconn.commit()
     print(list_of_apt)
     if not list_of_apt:
-        return jsonify(message="Lonely angel")
+        return jsonify(message="There are no appointments")
 
     list_of_apt_details=[]
     for i in list_of_apt:
@@ -303,7 +312,7 @@ def view_all_apt():
         list_of_apt_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
     return jsonify(list_of_apt_details)
 
-
+#########################################################################################################################
 #api to reschedule an appointment
 #@app.route("/reschedule")
 @app.route("/reschedule", methods=["POST"])
@@ -319,7 +328,7 @@ def reschedule():
 	
 	#fac_id= '123'
 	#apt_id= '12'
-	#fac_msg='macha i got some plumbing work'
+	#fac_msg='busy'
 	#suggested_date='2020-12-07'
 	#suggested_time='17:00:00'
 	
@@ -332,7 +341,7 @@ def reschedule():
 	resc_apt=cursor.fetchone()
 	dbconn.commit()
 	if not resc_apt:
-		return jsonify(message="Lonely angel")
+		return jsonify(message="There are no appointments")
 	else:
 		aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = resc_apt
 		date_scheduled = dateTime.split("#")[0]
@@ -342,19 +351,18 @@ def reschedule():
 
 ##################################################################################################
 
-    #api to accept the appointment
-    #@app.route("/accept",methods=["POST"])
+#api to accept the appointment
 @app.route("/accept",methods=["POST"])
 def accept():
     # takes in the appointment id
-    #apt_id= request.json['apt_id']
-    apt_id="2233asdfasd3"
+    apt_id= request.json['apt_id']
+    #apt_id="2233asdfasd3"
     try:
         cursor = dbconn.cursor()
         cursor.execute("SELECT * from Appointments where appointment_id=%s",(apt_id,))
         apt_details=cursor.fetchone()
     except:
-        return jsonify(message="Give correct apt_id muthe")
+        return jsonify(message="Invalid apt_id")
     if apt_details is None:
         return jsonify(message="No appointment with this id")
     appointment_id, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = apt_details
@@ -392,6 +400,9 @@ def accept():
     else:
         return jsonify(message="Appointment waiting for student aproval")
     return jsonify(message="this will never be seen Appointment Accepted")
+
+
+##################################################################################################
 
 @app.route("/apt_by_month",methods=["POST"])
 def apt_by_month():
@@ -439,6 +450,7 @@ def apt_by_month():
     print(montharr)
     return jsonify(montharr)
 
+##################################################################################################
 
 #api to send all appointments of the faculty for the day
 
@@ -459,7 +471,7 @@ def apt_by_day():
     dbconn.commit()
     print(list_of_apt)
     if not list_of_apt:
-        return jsonify(message="Lonely angel")
+        return jsonify(message="There are no appointments")
 
     list_of_apt_details=[]
     for i in list_of_apt:
@@ -471,15 +483,13 @@ def apt_by_day():
 
 		#api to send all appointments of the faculty for the month
 
-########################################  FACULTY STUFF OVER  ####################################
-
 ########################################  ADMIN STUFF  #########################################
 @app.route("/view_all",methods=["POST"])
 #@app.route("/view_all")
 def view_all():
     # takes in the admin id    
     u_id= request.json['u_id']
-    #u_id="kozhi"
+
     
     cursor = dbconn.cursor()
     cursor.execute("SELECT * from Admin WHERE admin_id=%s",(u_id,))
@@ -493,7 +503,7 @@ def view_all():
     dbconn.commit()
     print(list_of_apt)
     if not list_of_apt:
-        return jsonify(message2="Lonely angel")
+        return jsonify(message2="There are no appointments")
 
     list_of_apt_details=[]
     for i in list_of_apt:
