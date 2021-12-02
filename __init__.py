@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2.extensions import AsIs
 import urllib.parse as up
 
 from flask import Flask,request
@@ -305,17 +306,28 @@ def view_all_apt():
 
 
 #api to reschedule an appointment
+#@app.route("/reschedule")
 @app.route("/reschedule", methods=["POST"])
 def reschedule():
-	# u_id = "B190SDtestCS"
+	
 	cursor = dbconn.cursor()
+	
 	fac_id= request.json['u_id']
 	apt_id= request.json['apt_id']
 	fac_msg=request.json['fac_msg']
 	suggested_date=request.json['suggested_date']
 	suggested_time=request.json['suggested_time']
+	
+	#fac_id= '123'
+	#apt_id= '12'
+	#fac_msg='macha i got some plumbing work'
+	#suggested_date='2020-12-07'
+	#suggested_time='17:00:00'
+	
+	status='4' #default value
+	
 	suggested_datetime=suggested_date+"#"+suggested_time
-	cursor.execute("UPDATE Appointments SET suggested_date=%s,faculty_message=%s where fac_id=%s and appointment_id=%s",(suggested_datetime,fac_msg,fac_id,apt_id))
+	cursor.execute("UPDATE Appointments SET suggested_date=%s,faculty_message=%s,status=%s where fac_id=%s and appointment_id=%s",(suggested_datetime,fac_msg,status,fac_id,apt_id))
 	dbconn.commit()
 	cursor.execute("SELECT * from Appointments where fac_id=%s and appointment_id=%s",(fac_id,apt_id))
 	resc_apt=cursor.fetchone()
@@ -323,12 +335,11 @@ def reschedule():
 	if not resc_apt:
 		return jsonify(message="Lonely angel")
 	else:
-		for i in resc_apt:
-			aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
-			date_scheduled = dateTime.split("#")[0]
-			time_scheduled = dateTime.split("#")[1]
-			resc_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
-		return jsonify(resc_apt)
+		aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = resc_apt
+		date_scheduled = dateTime.split("#")[0]
+		time_scheduled = dateTime.split("#")[1]
+		resc_apt={"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}
+	return jsonify(resc_apt)
 
 ##################################################################################################
 
@@ -386,11 +397,18 @@ def accept():
 #api to send all appointments of the faculty for the day
 
 @app.route("/apt_by_day",methods=["POST"])
+#@app.route("/apt_by_day")
 def apt_by_day():
+    
     fac_id= request.json['u_id']
     day=request.json['date']
+    
+    #fac_id='123'
+    #day='2020-12-01'
+    
     cursor = dbconn.cursor()
-    cursor.execute("SELECT * from Appointments where fac_id=%s and date_scheduled=%s ORDER BY date_scheduled",(fac_id,day,))
+    cursor.execute("SELECT * from Appointments where fac_id=%s and date_scheduled LIKE '%s#__:__:__' ORDER BY date_scheduled",(fac_id,AsIs(day),))
+    
     list_of_apt=cursor.fetchall()
     dbconn.commit()
     print(list_of_apt)
@@ -402,7 +420,7 @@ def apt_by_day():
         aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
         date_scheduled = dateTime.split("#")[0]
         time_scheduled = dateTime.split("#")[1]
-        list_of_apt_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
+        list_of_apt_details.append({"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message})
     return jsonify(list_of_apt_details)
 
 		#api to send all appointments of the faculty for the month
@@ -411,11 +429,12 @@ def apt_by_day():
 
 ########################################  ADMIN STUFF  #########################################
 @app.route("/view_all",methods=["POST"])
+#@app.route("/view_all")
 def view_all():
-    # takes in the faculty id
-    #fac_id= request.json['fac_id']
-    #admin_id="123asfa"
+    # takes in the admin id    
     u_id= request.json['u_id']
+    #u_id="kozhi"
+    
     cursor = dbconn.cursor()
     cursor.execute("SELECT * from Admin WHERE admin_id=%s",(u_id,))
     admins=cursor.fetchone();
@@ -435,7 +454,7 @@ def view_all():
         aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
         date_scheduled = dateTime.split("#")[0]
         time_scheduled = dateTime.split("#")[1]
-        list_of_apt_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
+        list_of_apt_details.append({"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message})
     return jsonify(list_of_apt_details)
 
 
