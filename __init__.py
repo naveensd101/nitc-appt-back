@@ -41,6 +41,11 @@ app.config.from_mapping(
 
 #########################################################################################################################
 
+""" cursor = dbconn.cursor()
+cursor.execute("SELECT * from Appointments")
+print(cursor.fetchall())
+dbconn.commit() """
+
 @app.route("/")
 def index():
     response = jsonify(message="The server is running")
@@ -234,6 +239,44 @@ def request_stud():
 
     return jsonify(message="Appointment Requested")
 
+#Deletes an appointment
+@app.route("/delete_appt",methods=["DELETE"])
+def delete_appt():
+    cursor=dbconn.cursor()
+    appt_id=request.json["appt_id"]
+    print("appt_id",appt_id)
+    valid=-1
+    cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id))
+    valid=cursor.fetchone();
+    print("Valid=",valid)
+    dbconn.commit()
+    if valid:
+        cursor.execute("DELETE from Appointments where appointment_id=%s",(appt_id))
+        dbconn.commit()
+        return jsonify(message="deleted")
+    else:
+        return jsonify(message="Error: appointment doesn't exist")
+
+#Rejects an appointment
+@app.route("/reject_stud",methods=["DELETE"])
+def reject_stud():
+    cursor=dbconn.cursor()
+    appt_id=request.json["appt_id"]
+    print("appt_id",appt_id)
+    dbconn.commit()
+    cursor.execute("UPDATE Appointments SET status='2' where appointment_id=%s",(appt_id))
+    dbconn.commit()
+    return jsonify({"appt_id":appt_id,"status":2}) 
+#Approves an appointment
+@app.route("/approval_stud",methods=["DELETE"])
+def approval_stud():
+    cursor=dbconn.cursor()
+    appt_id=request.json["appt_id"]
+    print("appt_id",appt_id)
+    dbconn.commit()
+    cursor.execute("UPDATE Appointments SET status='3' where appointment_id=%s",(appt_id))
+    dbconn.commit()
+    return jsonify({"appt_id":appt_id,"status":3}) 
 
 ########################################  STUDENT OVER  ##########################################
 
@@ -242,24 +285,10 @@ def request_stud():
 #@app.route("/view_all_apt",methods=["POST"])
 @app.route("/view_all_apt")
 def view_all_apt():
+    return
     # takes in the faculty id
-    #fac_id= request.json['fac_id']
-    fac_id="123asfa"
-    cursor = dbconn.cursor()
-    cursor.execute("SELECT * from Appointments where fac_id=%s",(fac_id,))
-    list_of_apt=cursor.fetchall()
-    dbconn.commit()
-    print(list_of_apt)
-    if not list_of_apt:
-        return jsonify(message="Lonely angel")
+    #fac_id= reques@app.route("/delete_appt",methods=["DELETE"])
 
-    list_of_apt_details=[]
-    for i in list_of_apt:
-        aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
-        date_scheduled = dateTime.split("#")[0]
-        time_scheduled = dateTime.split("#")[1]
-        list_of_apt_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
-    return jsonify(list_of_apt_details)
 
 ########################################  FACULTY STUFF OVER  ####################################
 
