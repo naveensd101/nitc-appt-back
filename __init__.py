@@ -41,20 +41,33 @@ app.config.from_mapping(
 
 #########################################################################################################################
 
+<<<<<<< HEAD
+=======
+""" cursor = dbconn.cursor()
+cursor.execute("SELECT * from Appointments")
+print(cursor.fetchall())
+dbconn.commit() """
+
+>>>>>>> 7379932b13340f20c4d848e4959d10bceed2d28d
 @app.route("/")
 def index():
     response = jsonify(message="The server is running")
     return response
 
 #########################################################################################################################
-
+#Signs all kinds of users in
 @app.route("/signin",methods=["POST"])
 def signinpage():
     cursor = dbconn.cursor()
+    """ {
+    "u_id":"B190SDtestCS",
+    "pwd":"SDtestPass",
+    "type":"student"
+    } """
     uids= request.json['u_id']
     password= request.json['pwd']
     typess= request.json['type']
-	# print(request.json[])
+
     #password encryption:
     password=hashlib.sha256(password.encode('utf-8')).hexdigest() #hashvalue
 
@@ -126,7 +139,11 @@ def registration():
     #mobilenos= request.json['mobileno']
     #depts= request.json['dname']
     #typess= request.json['type']
+<<<<<<< HEAD
 
+=======
+
+>>>>>>> 7379932b13340f20c4d848e4959d10bceed2d28d
     uids= 'B190SDtestCS'
     names= 'SDtestName'
     emails= 'SDtestName@gmail.com'
@@ -134,6 +151,7 @@ def registration():
     mobilenos= '1239991111'
     depts= 'CSE'
     typess= 'student'
+<<<<<<< HEAD
 
     #password encryption:
     password=hashlib.sha256(password.encode('utf-8')).hexdigest() #hashvalue
@@ -142,6 +160,16 @@ def registration():
     cursor.execute("INSERT INTO Users (u_id, uname, email, pwd, mobileno) VALUES(%s, %s, %s, %s, %s)",(uids, names, emails, password, mobilenos))
     dbconn.commit()
 
+=======
+
+    #password encryption:
+    password=hashlib.sha256(password.encode('utf-8')).hexdigest() #hashvalue
+
+    #insert data into user db
+    cursor.execute("INSERT INTO Users (u_id, uname, email, pwd, mobileno) VALUES(%s, %s, %s, %s, %s)",(uids, names, emails, password, mobilenos))
+    dbconn.commit()
+
+>>>>>>> 7379932b13340f20c4d848e4959d10bceed2d28d
     #getting dept id from department db
     cursor = dbconn.cursor()
     cursor.execute("SELECT department_id from Departments where dname=%s",(depts,))
@@ -163,6 +191,19 @@ def registration():
         return jsonify({"u_id":uids,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos,"deptid":deptids,"dname":depts})
 
 #########################################################################################################################
+#Gets the id and username of all the faculties
+@app.route("/list_all_fac",methods=["POST"])
+def listAllFacPage():
+    cursor = dbconn.cursor()
+    list_of_uname=[]
+    cursor = dbconn.cursor()
+    cursor.execute("SELECT u.u_id,u.uname FROM Users u, Faculty f WHERE u.u_id=f.ssn")
+    list_of_uname=cursor.fetchall()
+    response=list(map(lambda x: {"u_id":x[0],"uname":x[1]},list_of_uname))
+    print(response)
+    dbconn.commit()
+
+    return jsonify(response)
 
 @app.route("/list_all_fac",methods=["POST"])
 def listAllFacPage():
@@ -174,44 +215,44 @@ def listAllFacPage():
     print(list_of_uname)
     dbconn.commit()
     return jsonify(list_of_uname)
-
 #########################################################################################################################
-
-#@app.route("/details",methods=["POST"])
-@app.route("/details")
+#Gets details of a specific user
+@app.route("/details",methods=["POST"])
 def details():
+    """ {
+    "u_id":"123"
+    } """
     cursor = dbconn.cursor()
-    u_id = "B190SDtestCS"
+    uid= request.json['u_id']
     #u_id= request.json['u_id']
-    cursor.execute("SELECT * from Users where u_id=%s",(u_id,))
+    cursor.execute("SELECT * from Users where u_id=%s",(uid,))
     details=cursor.fetchone()
     dbconn.commit()
     u_id,names,emails,password,mobilenos=details
     print(details)
     return jsonify({"u_id":u_id,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos})
 
-########################################  STUDENT  ###############################################
-
+#########################################################################################################################
 #insert into the appointment table
-#@app.route("/request_stud",methods=["POST"])
-@app.route("/request_stud")
+@app.route("/request_stud",methods=["POST"])
 def request_stud():
-    #Details that we take in: date_created, date_appointment, time_appointment, title, description, stud_id, fac_id
     cursor = dbconn.cursor()
-    date_created = "2020-12-30"
-    date_appointment = "2020-12-31"
-    time_appointment = "10:00:00"
-    title = "test3"
-    description = "3rd test description"
-    stud_id = "B190SDtestCS"
-    fac_id = "123"
-    #date_created= request.json['date_created']
-    #date_appointment= request.json['date_appointment']
-    #time_appointment= request.json['time_appointment']
-    #title= request.json['title']
-    #description= request.json['description']
-    #stud_id= request.json['stud_id']
-    #fac_id= request.json['fac_id']
+    """ {
+    "date_created" : "2020-12-30",
+    "date_appointment" : "2020-12-31",
+    "time_appointment" : "10:00:00",
+    "title" : "test3",
+    "description" : "3rd test description",
+    "stud_id" : "B190SDtestCS",
+    "fac_id" : "123"
+    } """
+    date_created= request.json['date_created']
+    date_appointment= request.json['date_appointment']
+    time_appointment= request.json['time_appointment']
+    title= request.json['title']
+    description= request.json['description']
+    stud_id= request.json['stud_id']
+    fac_id= request.json['fac_id']
     dateTime = date_appointment + "#" + time_appointment
     # we are concatinating the date and time to get the datetime
     # because our database only has one column for datetime
@@ -224,6 +265,45 @@ def request_stud():
     dbconn.commit()
 
     return jsonify(message="Appointment Requested")
+
+#Deletes an appointment
+@app.route("/delete_appt",methods=["DELETE"])
+def delete_appt():
+    cursor=dbconn.cursor()
+    appt_id=request.json["appt_id"]
+    print("appt_id",appt_id)
+    valid=-1
+    cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id))
+    valid=cursor.fetchone();
+    print("Valid=",valid)
+    dbconn.commit()
+    if valid:
+        cursor.execute("DELETE from Appointments where appointment_id=%s",(appt_id))
+        dbconn.commit()
+        return jsonify(message="deleted")
+    else:
+        return jsonify(message="Error: appointment doesn't exist")
+
+#Rejects an appointment
+@app.route("/reject_stud",methods=["DELETE"])
+def reject_stud():
+    cursor=dbconn.cursor()
+    appt_id=request.json["appt_id"]
+    print("appt_id",appt_id)
+    dbconn.commit()
+    cursor.execute("UPDATE Appointments SET status='2' where appointment_id=%s",(appt_id))
+    dbconn.commit()
+    return jsonify({"appt_id":appt_id,"status":2})
+#Approves an appointment
+@app.route("/approval_stud",methods=["DELETE"])
+def approval_stud():
+    cursor=dbconn.cursor()
+    appt_id=request.json["appt_id"]
+    print("appt_id",appt_id)
+    dbconn.commit()
+    cursor.execute("UPDATE Appointments SET status='3' where appointment_id=%s",(appt_id))
+    dbconn.commit()
+    return jsonify({"appt_id":appt_id,"status":3})
 
 ########################################  STUDENT OVER  ##########################################
 
