@@ -327,7 +327,7 @@ def reschedule():
 			aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
 			date_scheduled = dateTime.split("#")[0]
 			time_scheduled = dateTime.split("#")[1]
-			git.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
+			resc_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
 		return jsonify(resc_apt)
 
 ##################################################################################################
@@ -427,7 +427,7 @@ def apt_by_month():
         
     #print(all_appts_of_month)
     print(montharr)
-    return jsonify(all_appts_of_month)
+    return jsonify(montharr)
 
 
 #api to send all appointments of the faculty for the day
