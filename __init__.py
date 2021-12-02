@@ -238,6 +238,39 @@ def create_app():
 
         return jsonify(message="Appointment Requested")
 
+    #view all appointments requested by that perticular student
+    #@app.route("/view_appointments_stud",methods=["POST"])
+    @app.route("/view_all_apt_stud")
+    def view_all_apt_stud():
+        stud_id = "B190SDtestCS"
+        #stud_id= request.json['stud_id']
+        cursor = dbconn.cursor()
+        cursor.execute("SELECT * from Appointments where stu_id=%s",(stud_id,))
+        details=cursor.fetchall()
+        dbconn.commit()
+        if not details:
+            return jsonify(message="No appointments found")
+        list_of_appointments=[]
+        for apt in details:
+            appointment_id, status, date_created, dateTime, title, decription, stu_id, fac_id, suggested_date, faculty_message = apt
+            date_appointment, time_appointment = dateTime.split("#")
+            list_of_appointments.append(
+                    {
+                        'appointment_id': appointment_id,
+                        'status': status,
+                        'date_created': date_created,
+                        'date_appointment': date_appointment,
+                        'time_appointment': time_appointment,
+                        'title': title,
+                        'description': decription,
+                        'stu_id': stu_id,
+                        'fac_id': fac_id,
+                        'suggested_date': suggested_date,
+                        'faculty_message': faculty_message
+                    }
+                )
+        return jsonify(list_of_appointments)
+
 
 ########################################  STUDENT OVER  ##########################################
 
