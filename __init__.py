@@ -41,6 +41,11 @@ app.config.from_mapping(
 
 #########################################################################################################################
 
+""" cursor = dbconn.cursor()
+cursor.execute("SELECT * from Appointments")
+print(cursor.fetchall())
+dbconn.commit() """
+
 @app.route("/")
 def index():
     response = jsonify(message="The server is running")
