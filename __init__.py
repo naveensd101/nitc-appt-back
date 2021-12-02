@@ -350,6 +350,54 @@ def create_app():
             return jsonify(message="Appointment waiting for student aproval")
         return jsonify(message="this will never be seen Appointment Accepted")
 
+    #api to reject a request by faculty
+    #@app.route("/cancel",methods=["POST"])
+    @app.route("/cancel")
+    def cancel():
+        # takes in the appointment id
+        #apt_id= request.json['appointment_id']
+        apt_id="10"
+        try:
+            cursor = dbconn.cursor()
+            cursor.execute("SELECT * from Appointments where appointment_id=%s",(apt_id,))
+            apt_details=cursor.fetchone()
+        except:
+            return jsonify(message="Give correct apt_id muthe")
+        if apt_details is None:
+            return jsonify(message="No appointment with this id")
+        appointment_id, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = apt_details
+        date_scheduled, time_scheduled = dateTime.split("#")
+        #UPdate the status to 2 for rejected if the current status is 1
+        if status == "1":
+            cursor = dbconn.cursor()
+            cursor.execute("UPDATE Appointments SET status=%s WHERE appointment_id=%s",("2",apt_id))
+            dbconn.commit()
+            return jsonify(
+                    {
+                        "message":"Appointment Rejected", 
+                    },
+                    {
+                        appointment_id: {
+                        "status": "2",
+                        "date_created": date_created,
+                        "date_scheduled": date_scheduled,
+                        "time_scheduled": time_scheduled,
+                        "title": title,
+                        "description": description,
+                        "stu_id": stu_id,
+                        "fac_id": fac_id,
+                        "suggested_date": suggested_date,
+                        "faculty_message": faculty_message
+                        }
+                    }
+                    )
+        elif status == "2":
+            return jsonify(message="Appointment already rejected")
+        elif status == "3":
+            return jsonify(message="Appointment already accepted")
+        else:
+            return jsonify(message="Appointment waiting for student aproval")
+
 ########################################  FACULTY STUFF OVER  ####################################
 
 
