@@ -201,7 +201,6 @@ def create_app():
         details=cursor.fetchone()
         dbconn.commit()
         u_id,names,emails,password,mobilenos=details
-        print(details)
         return jsonify({"u_id":u_id,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos})
 
 ########################################  STUDENT  ###############################################
@@ -254,7 +253,6 @@ def create_app():
         cursor.execute("SELECT * from Appointments where fac_id=%s",(fac_id,))
         list_of_apt=cursor.fetchall()
         dbconn.commit()
-        print(list_of_apt)
         if not list_of_apt:
             return jsonify(message="Lonely angel")
 
@@ -265,6 +263,59 @@ def create_app():
             time_scheduled = dateTime.split("#")[1]
             list_of_apt_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
         return jsonify(list_of_apt_details)
+
+##################################################################################################
+
+    #api to accept the appointment
+    #@app.route("/accept",methods=["POST"])
+    @app.route("/accept")
+    def accept():
+        # takes in the appointment id
+        #apt_id= request.json['apt_id']
+        apt_id="2233asdfasd3"
+        try:
+            cursor = dbconn.cursor()
+            cursor.execute("SELECT * from Appointments where appointment_id=%s",(apt_id,))
+            apt_details=cursor.fetchone()
+        except:
+            return jsonify(message="Give correct apt_id muthe")
+        if apt_details is None:
+            return jsonify(message="No appointment with this id")
+        appointment_id, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = apt_details
+        date_scheduled = dateTime.split("#")[0]
+        time_scheduled = dateTime.split("#")[1]
+
+        #UPdate the status to 3 for accepted if the current status is 1
+        if status == "1":
+            cursor = dbconn.cursor()
+            cursor.execute("UPDATE Appointments SET status=%s WHERE appointment_id=%s",("3",apt_id))
+            dbconn.commit()
+            return jsonify(
+                    {
+                        "message":"Appointment Accepted", 
+                    },
+                    {
+                        appointment_id: {
+                        "status": "3",
+                        "date_created": date_created,
+                        "date_scheduled": date_scheduled,
+                        "time_scheduled": time_scheduled,
+                        "title": title,
+                        "description": description,
+                        "stu_id": stu_id,
+                        "fac_id": fac_id,
+                        "suggested_date": suggested_date,
+                        "faculty_message": faculty_message
+                        }
+                    }
+                    )
+        elif status == "3":
+            return jsonify(message="Appointment already accepted")
+        elif status == "2":
+            return jsonify(message="Appointment already rejected")
+        else:
+            return jsonify(message="Appointment waiting for student aproval")
+        return jsonify(message="this will never be seen Appointment Accepted")
 
 ########################################  FACULTY STUFF OVER  ####################################
 
