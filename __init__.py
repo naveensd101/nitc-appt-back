@@ -246,35 +246,34 @@ def delete_appt():
     appt_id=request.json["appt_id"]
     print("appt_id",appt_id)
     valid=-1
-    cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id))
+    cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id,))
     valid=cursor.fetchone();
     print("Valid=",valid)
     dbconn.commit()
     if valid:
-        cursor.execute("DELETE from Appointments where appointment_id=%s",(appt_id))
+        cursor.execute("DELETE from Appointments where appointment_id=%s",(appt_id,))
         dbconn.commit()
         return jsonify(message="deleted")
     else:
         return jsonify(message="Error: appointment doesn't exist")
 
 #Rejects an appointment
-@app.route("/reject_stud",methods=["DELETE"])
+@app.route("/reject_stud",methods=["POST"])
 def reject_stud():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
     print("appt_id",appt_id)
     dbconn.commit()
-    cursor.execute("UPDATE Appointments SET status='2' where appointment_id=%s",(appt_id))
+    cursor.execute("UPDATE Appointments SET status='2' where appointment_id=%s",(appt_id,))
     dbconn.commit()
     return jsonify({"appt_id":appt_id,"status":2})
 #Approves an appointment
-@app.route("/approval_stud",methods=["DELETE"])
+@app.route("/approval_stud",methods=["POST"])
 def approval_stud():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
     print("appt_id",appt_id)
-    dbconn.commit()
-    cursor.execute("UPDATE Appointments SET status='3' where appointment_id=%s",(appt_id))
+    cursor.execute("UPDATE Appointments SET status='3' WHERE appointment_id=%s ;",(appt_id,))
     dbconn.commit()
     return jsonify({"appt_id":appt_id,"status":3})
 
@@ -393,6 +392,53 @@ def accept():
     else:
         return jsonify(message="Appointment waiting for student aproval")
     return jsonify(message="this will never be seen Appointment Accepted")
+
+@app.route("/apt_by_month",methods=["POST"])
+def apt_by_month():
+    def getmonthlength(monthnum,yearnum):
+        if monthnum in [1,3,5,7,10,12]:
+            return 31
+        elif monthnum in [4,6,8,9,11]:
+            return 30
+        else:
+            if((yearnum % 400 == 0) or (yearnum % 100 != 0) and (yearnum % 4 == 0)):   
+                return 29   
+            else:  
+                return 28
+    cursor=dbconn.cursor()
+    """ {
+    "fac_id":"123",
+    "month":"12",
+    "year" : "2020"
+    } """
+    fac_id=request.json["fac_id"]
+    month=request.json["month"]
+    year=request.json["year"]
+    cursor.execute("SELECT * FROM Appointments WHERE fac_id=%s AND status='3' AND date_scheduled LIKE '%s-%s-__#__:__:__' ORDER BY date_scheduled",(fac_id,AsIs(year),AsIs(month)))
+    all_appts_of_month=cursor.fetchall()
+    weekarr=[]
+    montharr=[]
+    dayarr=[]
+    weekcount=0
+    index=0
+    length= getmonthlength(int(month),int(year));
+    for daycount in range(length): 
+        if daycount%7==0 and daycount!=0:
+            montharr.append(weekarr)
+            weekarr=[]
+            weekcount+=1
+ 
+        while index<len(all_appts_of_month) and int(daycount+1)==int(all_appts_of_month[index][3][8:10]):
+            dayarr.append(all_appts_of_month[index])
+            index+=1
+            
+        weekarr.append(dayarr)
+        dayarr=[]
+        
+    #print(all_appts_of_month)
+    print(montharr)
+    return jsonify(montharr)
+
 
 #api to send all appointments of the faculty for the day
 
