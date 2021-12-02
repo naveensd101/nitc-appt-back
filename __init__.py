@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2.extensions import AsIs
 import urllib.parse as up
 
 from flask import Flask,request
@@ -72,10 +73,10 @@ def signinpage():
     x=cursor.fetchone()
     if x is None:
         return jsonify(message="Complete the registration")
-    
+
     temp= x[0]
     dbconn.commit()
-    
+
 
     if temp:
         passcode=temp
@@ -85,18 +86,18 @@ def signinpage():
                 cursor.execute("SELECT deptid from Student where roll_no=%s",(uids,))
                 deptids= cursor.fetchone()[0]
                 dbconn.commit()
-                
+
                 cursor = dbconn.cursor()
                 cursor.execute("SELECT dname from Departments where department_id=%s",(deptids,))
                 depts= cursor.fetchone()[0]
                 dbconn.commit()
-                
+
                 cursor = dbconn.cursor()
                 cursor.execute("SELECT * from Users where u_id=%s",(uids,))
                 dbconn.commit()
                 tempone= cursor.fetchone()
                 uids,names,emails,password,mobilenos=tempone
-                
+
                 return jsonify({"u_id":uids,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos,"deptid":deptids,"dname":depts})
 
             elif typess=='faculty':
@@ -104,24 +105,24 @@ def signinpage():
                 cursor.execute("SELECT deptid from Faculty where ssn=%s",(uids,))
                 deptids= cursor.fetchone()[0]
                 dbconn.commit()
-                
+
                 cursor = dbconn.cursor()
                 cursor.execute("SELECT dname from Departments where department_id=%s",(deptids,))
                 depts= cursor.fetchone()[0]
                 dbconn.commit()
-                
+
                 cursor = dbconn.cursor()
                 cursor.execute("SELECT * from Users where u_id=%s",(uids,))
                 dbconn.commit()
                 tempone= cursor.fetchone()
                 uids,names,emails,password,mobilenos=tempone
-                
+
                 return jsonify({"u_id":uids,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos,"deptid":deptids,"dname":depts})
 
 
         else:
                 return jsonify(message="Incorrect Password")
-                
+
 #########################################################################################################################
 
 #@app.route("/signup",methods=["POST"])
@@ -130,13 +131,13 @@ def registration():
 
     cursor = dbconn.cursor()
     #uids= request.json['u_id']
-    #names= request.json['uname'] #name 
+    #names= request.json['uname'] #name
     #emails= request.json['email']
     #password= request.json['pwd']
     #mobilenos= request.json['mobileno']
     #depts= request.json['dname']
     #typess= request.json['type']
-    
+
     uids= 'B190SDtestCS'
     names= 'SDtestName'
     emails= 'SDtestName@gmail.com'
@@ -144,20 +145,20 @@ def registration():
     mobilenos= '1239991111'
     depts= 'CSE'
     typess= 'student'
-    
+
     #password encryption:
     password=hashlib.sha256(password.encode('utf-8')).hexdigest() #hashvalue
-    
+
     #insert data into user db
     cursor.execute("INSERT INTO Users (u_id, uname, email, pwd, mobileno) VALUES(%s, %s, %s, %s, %s)",(uids, names, emails, password, mobilenos))
     dbconn.commit()
-    
+
     #getting dept id from department db
     cursor = dbconn.cursor()
     cursor.execute("SELECT department_id from Departments where dname=%s",(depts,))
     deptids= cursor.fetchone()[0]
     dbconn.commit()
-    
+
     if typess=='student':
         cursor = dbconn.cursor()
         cursor.execute("INSERT INTO Student (roll_no, deptid) VALUES(%s, %s)",(uids, deptids))
@@ -204,8 +205,7 @@ def details():
     print(details)
     return jsonify({"u_id":u_id,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos})
 
-########################################  STUDENT  ###############################################
-
+#########################################################################################################################
 #insert into the appointment table
 @app.route("/request_stud",methods=["POST"])
 def request_stud():
@@ -246,37 +246,36 @@ def delete_appt():
     appt_id=request.json["appt_id"]
     print("appt_id",appt_id)
     valid=-1
-    cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id))
+    cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id,))
     valid=cursor.fetchone();
     print("Valid=",valid)
     dbconn.commit()
     if valid:
-        cursor.execute("DELETE from Appointments where appointment_id=%s",(appt_id))
+        cursor.execute("DELETE from Appointments where appointment_id=%s",(appt_id,))
         dbconn.commit()
         return jsonify(message="deleted")
     else:
         return jsonify(message="Error: appointment doesn't exist")
 
 #Rejects an appointment
-@app.route("/reject_stud",methods=["DELETE"])
+@app.route("/reject_stud",methods=["POST"])
 def reject_stud():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
     print("appt_id",appt_id)
     dbconn.commit()
-    cursor.execute("UPDATE Appointments SET status='2' where appointment_id=%s",(appt_id))
+    cursor.execute("UPDATE Appointments SET status='2' where appointment_id=%s",(appt_id,))
     dbconn.commit()
-    return jsonify({"appt_id":appt_id,"status":2}) 
+    return jsonify({"appt_id":appt_id,"status":2})
 #Approves an appointment
-@app.route("/approval_stud",methods=["DELETE"])
+@app.route("/approval_stud",methods=["POST"])
 def approval_stud():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
     print("appt_id",appt_id)
+    cursor.execute("UPDATE Appointments SET status='3' WHERE appointment_id=%s ;",(appt_id,))
     dbconn.commit()
-    cursor.execute("UPDATE Appointments SET status='3' where appointment_id=%s",(appt_id))
-    dbconn.commit()
-    return jsonify({"appt_id":appt_id,"status":3}) 
+    return jsonify({"appt_id":appt_id,"status":3})
 
 ########################################  STUDENT OVER  ##########################################
 
@@ -285,13 +284,206 @@ def approval_stud():
 #@app.route("/view_all_apt",methods=["POST"])
 @app.route("/view_all_apt")
 def view_all_apt():
-    return
     # takes in the faculty id
-    #fac_id= reques@app.route("/delete_appt",methods=["DELETE"])
+    #fac_id= request.json['fac_id']
+    fac_id="123asfa"
+    cursor = dbconn.cursor()
+    cursor.execute("SELECT * from Appointments where fac_id=%s",(fac_id,))
+    list_of_apt=cursor.fetchall()
+    dbconn.commit()
+    print(list_of_apt)
+    if not list_of_apt:
+        return jsonify(message="Lonely angel")
 
+    list_of_apt_details=[]
+    for i in list_of_apt:
+        aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
+        date_scheduled = dateTime.split("#")[0]
+        time_scheduled = dateTime.split("#")[1]
+        list_of_apt_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
+    return jsonify(list_of_apt_details)
+
+
+#api to reschedule an appointment
+@app.route("/reschedule", methods=["POST"])
+def reschedule():
+	# u_id = "B190SDtestCS"
+	cursor = dbconn.cursor()
+	fac_id= request.json['u_id']
+	apt_id= request.json['apt_id']
+	fac_msg=request.json['fac_msg']
+	suggested_date=request.json['suggested_date']
+	suggested_time=request.json['suggested_time']
+	suggested_datetime=suggested_date+"#"+suggested_time
+	cursor.execute("UPDATE Appointments SET suggested_date=%s,faculty_message=%s where fac_id=%s and appointment_id=%s",(suggested_datetime,fac_msg,fac_id,apt_id))
+	dbconn.commit()
+	cursor.execute("SELECT * from Appointments where fac_id=%s and appointment_id=%s",(fac_id,apt_id))
+	resc_apt=cursor.fetchone()
+	dbconn.commit()
+	if not resc_apt:
+		return jsonify(message="Lonely angel")
+	else:
+		for i in resc_apt:
+			aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
+			date_scheduled = dateTime.split("#")[0]
+			time_scheduled = dateTime.split("#")[1]
+			git.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
+		return jsonify(resc_apt)
+
+##################################################################################################
+
+    #api to accept the appointment
+    #@app.route("/accept",methods=["POST"])
+@app.route("/accept",methods=["POST"])
+def accept():
+    # takes in the appointment id
+    #apt_id= request.json['apt_id']
+    apt_id="2233asdfasd3"
+    try:
+        cursor = dbconn.cursor()
+        cursor.execute("SELECT * from Appointments where appointment_id=%s",(apt_id,))
+        apt_details=cursor.fetchone()
+    except:
+        return jsonify(message="Give correct apt_id muthe")
+    if apt_details is None:
+        return jsonify(message="No appointment with this id")
+    appointment_id, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = apt_details
+    date_scheduled = dateTime.split("#")[0]
+    time_scheduled = dateTime.split("#")[1]
+
+    #UPdate the status to 3 for accepted if the current status is 1
+    if status == "1":
+        cursor = dbconn.cursor()
+        cursor.execute("UPDATE Appointments SET status=%s WHERE appointment_id=%s",("3",apt_id))
+        dbconn.commit()
+        return jsonify(
+                {
+                    "message":"Appointment Accepted",
+                },
+                {
+                    appointment_id: {
+                    "status": "3",
+                    "date_created": date_created,
+                    "date_scheduled": date_scheduled,
+                    "time_scheduled": time_scheduled,
+                    "title": title,
+                    "description": description,
+                    "stu_id": stu_id,
+                    "fac_id": fac_id,
+                    "suggested_date": suggested_date,
+                    "faculty_message": faculty_message
+                    }
+                }
+                )
+    elif status == "3":
+        return jsonify(message="Appointment already accepted")
+    elif status == "2":
+        return jsonify(message="Appointment already rejected")
+    else:
+        return jsonify(message="Appointment waiting for student aproval")
+    return jsonify(message="this will never be seen Appointment Accepted")
+
+@app.route("/apt_by_month",methods=["POST"])
+def apt_by_month():
+    def getmonthlength(monthnum,yearnum):
+        if monthnum in [1,3,5,7,10,12]:
+            return 31
+        elif monthnum in [4,6,8,9,11]:
+            return 30
+        else:
+            if((yearnum % 400 == 0) or (yearnum % 100 != 0) and (yearnum % 4 == 0)):   
+                return 29   
+            else:  
+                return 28
+    cursor=dbconn.cursor()
+    """ {
+    "fac_id":"123",
+    "month":"12",
+    "year" : "2020"
+    } """
+    fac_id=request.json["fac_id"]
+    month=request.json["month"]
+    year=request.json["year"]
+    cursor.execute("SELECT * FROM Appointments WHERE fac_id=%s AND status='3' AND date_scheduled LIKE '%s-%s-__#__:__:__' ORDER BY date_scheduled",(fac_id,AsIs(year),AsIs(month)))
+    all_appts_of_month=cursor.fetchall()
+    weekarr=[]
+    montharr=[]
+    dayarr=[]
+    weekcount=0
+    index=0
+    length= getmonthlength(int(month),int(year));
+    for daycount in range(length): 
+        if daycount%7==0 and daycount!=0:
+            montharr.append(weekarr)
+            weekarr=[]
+            weekcount+=1
+ 
+        while index<len(all_appts_of_month) and int(daycount+1)==int(all_appts_of_month[index][3][8:10]):
+            dayarr.append(all_appts_of_month[index])
+            index+=1
+            
+        weekarr.append(dayarr)
+        dayarr=[]
+        
+    #print(all_appts_of_month)
+    print(montharr)
+    return jsonify(all_appts_of_month)
+
+
+#api to send all appointments of the faculty for the day
+
+@app.route("/apt_by_day",methods=["POST"])
+def apt_by_day():
+    fac_id= request.json['u_id']
+    day=request.json['date']
+    cursor = dbconn.cursor()
+    cursor.execute("SELECT * from Appointments where fac_id=%s and date_scheduled=%s ORDER BY date_scheduled",(fac_id,day,))
+    list_of_apt=cursor.fetchall()
+    dbconn.commit()
+    print(list_of_apt)
+    if not list_of_apt:
+        return jsonify(message="Lonely angel")
+
+    list_of_apt_details=[]
+    for i in list_of_apt:
+        aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
+        date_scheduled = dateTime.split("#")[0]
+        time_scheduled = dateTime.split("#")[1]
+        list_of_apt_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
+    return jsonify(list_of_apt_details)
+
+		#api to send all appointments of the faculty for the month
 
 ########################################  FACULTY STUFF OVER  ####################################
 
+########################################  ADMIN STUFF  #########################################
+@app.route("/view_all",methods=["POST"])
+def view_all():
+    # takes in the faculty id
+    #fac_id= request.json['fac_id']
+    #admin_id="123asfa"
+    u_id= request.json['u_id']
+    cursor = dbconn.cursor()
+    cursor.execute("SELECT * from Admin WHERE admin_id=%s",(u_id,))
+    admins=cursor.fetchone();
+    dbconn.commit()
+    if not admins:
+	    return jsonify(message1="Not an admin")
+
+    cursor.execute("SELECT * from Appointments ORDER by date_scheduled")
+    list_of_apt=cursor.fetchall()
+    dbconn.commit()
+    print(list_of_apt)
+    if not list_of_apt:
+        return jsonify(message2="Lonely angel")
+
+    list_of_apt_details=[]
+    for i in list_of_apt:
+        aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
+        date_scheduled = dateTime.split("#")[0]
+        time_scheduled = dateTime.split("#")[1]
+        list_of_apt_details.append({aptId: {"status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}})
+    return jsonify(list_of_apt_details)
 
 
 if __name__ == '__main__':
