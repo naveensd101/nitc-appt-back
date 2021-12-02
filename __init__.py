@@ -250,6 +250,32 @@ def request_stud():
 
 #########################################################################################################################
 #Deletes an appointment
+@app.route("/get_appt",methods=["POST"])
+def get_appt():
+    cursor=dbconn.cursor()
+    appt_id=request.json["appt_id"]
+    #appt_id='20'
+    print("appt_id",appt_id)
+    valid=-1
+    cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id,))
+    valid=cursor.fetchone()
+    dbconn.commit()
+    print("Valid=",valid)
+    appointment_id,status,date_created,dateTime,title,decription,stu_id,fac_id,suggested_date,faculty_message = valid
+    cursor.execute("SELECT uname FROM Users WHERE u_id=%s",(fac_id,))
+    fac_name=cursor.fetchone()[0]
+    dbconn.commit()
+    cursor.execute("SELECT uname FROM Users WHERE u_id=%s",(stu_id,))
+    stu_name=cursor.fetchone()[0]
+    dbconn.commit()
+    date_scheduled,time_scheduled = dateTime.split("#")
+    if valid:
+        return jsonify({"appointment_id":appointment_id,"status":status,"date_created":date_created,"date_scheduled":date_scheduled,"time_scheduled":time_scheduled,"title":title,"decription":decription,"suggested_date":suggested_date,"faculty_message":faculty_message,"stu_name":stu_name,"fac_name":fac_name})
+    else:
+        return jsonify(message="Error: appointment doesn't exist")
+
+#########################################################################################################################
+#Deletes an appointment
 @app.route("/delete_appt",methods=["DELETE"])
 #@app.route("/delete_appt")
 
@@ -517,9 +543,15 @@ def view_all():
     list_of_apt_details=[]
     for i in list_of_apt:
         aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
+        cursor.execute("SELECT uname FROM Users WHERE u_id=%s",(fac_id,))
+        fac_name=cursor.fetchone()
+        dbconn.commit()
+        cursor.execute("SELECT uname FROM Users WHERE u_id=%s",(stu_id,))
+        stu_name=cursor.fetchone()
+        dbconn.commit()
         date_scheduled = dateTime.split("#")[0]
         time_scheduled = dateTime.split("#")[1]
-        list_of_apt_details.append({"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message})
+        list_of_apt_details.append({"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "stu_name":stu_name,"fac_id": fac_id, "fac_name": fac_name, "suggested_date": suggested_date, "faculty_message": faculty_message})
     return jsonify(list_of_apt_details)
 
 
