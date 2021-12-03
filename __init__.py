@@ -387,36 +387,36 @@ def view_all_faculty():
 @app.route("/reschedule", methods=["POST"])
 def reschedule():
 
-	cursor = dbconn.cursor()
+    cursor = dbconn.cursor()
 
-	fac_id= request.json['u_id']
-	apt_id= request.json['apt_id']
-	fac_msg=request.json['fac_msg']
-	suggested_date=request.json['suggested_date']
-	suggested_time=request.json['suggested_time']
+    fac_id= request.json['u_id']
+    apt_id= request.json['apt_id']
+    fac_msg=request.json['fac_msg']
+    suggested_date=request.json['suggested_date']
+    suggested_time=request.json['suggested_time']
 
-	#fac_id= '123'
-	#apt_id= '12'
-	#fac_msg='busy'
-	#suggested_date='2020-12-07'
-	#suggested_time='17:00:00'
+    #fac_id= '123'
+    #apt_id= '12'
+    #fac_msg='busy'
+    #suggested_date='2020-12-07'
+    #suggested_time='17:00:00'
 
-	status='4' #default value
+    status='4' #default value
 
-	suggested_datetime=suggested_date+"#"+suggested_time
-	cursor.execute("UPDATE Appointments SET suggested_date=%s,faculty_message=%s,status=%s where fac_id=%s and appointment_id=%s",(suggested_datetime,fac_msg,status,fac_id,apt_id))
-	dbconn.commit()
-	cursor.execute("SELECT * from Appointments where fac_id=%s and appointment_id=%s",(fac_id,apt_id))
-	resc_apt=cursor.fetchone()
-	dbconn.commit()
-	if not resc_apt:
-		return jsonify(message="There are no appointments")
-	else:
-		aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = resc_apt
-		date_scheduled = dateTime.split("#")[0]
-		time_scheduled = dateTime.split("#")[1]
-		resc_apt={"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}
-	return jsonify(resc_apt)
+    suggested_datetime=suggested_date+"#"+suggested_time
+    cursor.execute("UPDATE Appointments SET suggested_date=%s,faculty_message=%s,status=%s where fac_id=%s and appointment_id=%s",(suggested_datetime,fac_msg,status,fac_id,apt_id))
+    dbconn.commit()
+    cursor.execute("SELECT * from Appointments where fac_id=%s and appointment_id=%s",(fac_id,apt_id))
+    resc_apt=cursor.fetchone()
+    dbconn.commit()
+    if not resc_apt:
+        return jsonify(message="There are no appointments")
+    else:
+        aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = resc_apt
+        date_scheduled = dateTime.split("#")[0]
+        time_scheduled = dateTime.split("#")[1]
+        resc_apt={"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}
+    return jsonify(resc_apt)
 
 ##################################################################################################
 
@@ -548,7 +548,7 @@ def apt_by_day():
         list_of_apt_details.append({"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message})
     return jsonify(list_of_apt_details)
 
-		#api to send all appointments of the faculty for the month
+        #api to send all appointments of the faculty for the month
 
 ########################################  ADMIN STUFF  #########################################
 @app.route("/view_all",methods=["POST"])
@@ -563,7 +563,7 @@ def view_all():
     admins=cursor.fetchone();
     dbconn.commit()
     if not admins:
-	    return jsonify(message1="Not an admin")
+        return jsonify(message1="Not an admin")
 
     cursor.execute("SELECT * from Appointments ORDER by date_scheduled")
     list_of_apt=cursor.fetchall()
@@ -591,29 +591,29 @@ def view_all():
 @app.route("/delete_acc",methods=["DELETE"])
 #@app.route("/delete_acc")
 def delete_acc():
-	 cursor=dbconn.cursor()
-	 uids=request.join["uid"]
-	 #uids='1234567'
-	 cursor.execute("SELECT COUNT(*) FROM Student where roll_no=%s",(uids,))
-	 valid=cursor.fetchone()[0];
-	 dbconn.commit()
-	 
-	 if valid:
-	 	cursor=dbconn.cursor()
-	 	cursor.execute("DELETE from Appointments where stu_id=%s",(uids,))
-	 	cursor.execute("DELETE from Student where roll_no=%s",(uids,))
-	 	cursor.execute("DELETE from Users where u_id=%s",(uids,))
-	 	dbconn.commit()
-	 	return jsonify(message="Deleted Student")
-	 
-	 else:
-	 	cursor=dbconn.cursor()
-	 	cursor.execute("DELETE from Appointments where fac_id=%s",(uids,))
-	 	cursor.execute("DELETE from Faculty where ssn=%s",(uids,))
-	 	cursor.execute("DELETE from Users where u_id=%s",(uids,))
-	 	dbconn.commit()
-	 	return jsonify(message="Deleted Faculty")
-	 		
+     cursor=dbconn.cursor()
+     uids=request.join["uid"]
+     #uids='1234567'
+     cursor.execute("SELECT COUNT(*) FROM Student where roll_no=%s",(uids,))
+     valid=cursor.fetchone()[0];
+     dbconn.commit()
+     
+     if valid:
+        cursor=dbconn.cursor()
+        cursor.execute("DELETE from Appointments where stu_id=%s",(uids,))
+        cursor.execute("DELETE from Student where roll_no=%s",(uids,))
+        cursor.execute("DELETE from Users where u_id=%s",(uids,))
+        dbconn.commit()
+        return jsonify(message="Deleted Student")
+     
+     else:
+        cursor=dbconn.cursor()
+        cursor.execute("DELETE from Appointments where fac_id=%s",(uids,))
+        cursor.execute("DELETE from Faculty where ssn=%s",(uids,))
+        cursor.execute("DELETE from Users where u_id=%s",(uids,))
+        dbconn.commit()
+        return jsonify(message="Deleted Faculty")
+            
         
 if __name__ == '__main__':
-	app.run()
+    app.run()
