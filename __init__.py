@@ -6,18 +6,12 @@ from flask_mail import Mail, Message
 
 from flask import Flask,request
 from flask import jsonify
-from flask_cors import CORS,cross_origin
-from datetime import date
-from datetime import datetime
+from flask_cors import CORS
 
 import os
-from os.path import join, dirname
+from os.path import join
 from dotenv import load_dotenv
 
-
-import math
-import requests
-import random
 import hashlib
 
 dotenv_path = join(os.path.dirname(os.path.realpath(__file__)), '.env')
