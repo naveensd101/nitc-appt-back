@@ -358,7 +358,7 @@ def view_all_student():
 @app.route("/view_all_faculty",methods=["POST"])
 #@app.route("/view_all")
 def view_all_faculty():
-    # takes in the admin id
+    # takes in the faculty id
     u_id= request.json['u_id']
     cursor=dbconn.cursor()
     cursor.execute("SELECT * from Appointments where fac_id=%s ORDER by date_scheduled",(u_id,))
@@ -531,9 +531,9 @@ def apt_by_day():
 
     #fac_id='123'
     #day='2020-12-01'
-
+    perc='%'
     cursor = dbconn.cursor()
-    cursor.execute("SELECT * from Appointments where fac_id=%s and date_scheduled LIKE '%s#__:__:__' ORDER BY date_scheduled",(fac_id,AsIs(day),))
+    cursor.execute("SELECT * from Appointments where fac_id=%s and date_scheduled LIKE '%s%s' ORDER BY date_scheduled",(fac_id,AsIs(day),AsIs(perc)))
 
     list_of_apt=cursor.fetchall()
     dbconn.commit()
@@ -597,7 +597,7 @@ def delete_acc():
      cursor.execute("SELECT COUNT(*) FROM Student where roll_no=%s",(uids,))
      valid=cursor.fetchone()[0];
      dbconn.commit()
-     
+
      if valid:
         cursor=dbconn.cursor()
         cursor.execute("DELETE from Appointments where stu_id=%s",(uids,))
@@ -605,7 +605,7 @@ def delete_acc():
         cursor.execute("DELETE from Users where u_id=%s",(uids,))
         dbconn.commit()
         return jsonify(message="Deleted Student")
-     
+
      else:
         cursor=dbconn.cursor()
         cursor.execute("DELETE from Appointments where fac_id=%s",(uids,))
@@ -613,7 +613,7 @@ def delete_acc():
         cursor.execute("DELETE from Users where u_id=%s",(uids,))
         dbconn.commit()
         return jsonify(message="Deleted Faculty")
-            
-        
+
+
 if __name__ == '__main__':
     app.run()
