@@ -61,14 +61,14 @@ mail = Mail(app)
 
 @app.route("/")
 def index():
-    msg = Message('Hello from falsk', sender = 'nitc.email.bot@gmail.com', recipients = ['naveen_b190707cs@nitc.ac.in'])
+    msg = Message('Hello from flask', sender = 'nitc.email.bot@gmail.com', recipients = ['naveen_b190707cs@nitc.ac.in'])
     msg.body = "Hello Flask message sent from Flask-Mail"
     mail.send(msg)
     response = jsonify(message="The server is running and mail is send")
     return response
 
 #########################################################################################################################
-#Signs all kinds of users in
+#Signs-in the users (admin,faculty,student)
 @app.route("/signin",methods=["POST"])
 def signinpage():
     cursor = dbconn.cursor()
@@ -148,6 +148,7 @@ def signinpage():
 
 #########################################################################################################################
 
+#Admin signs-up the users(faculty, student) into the DB.
 @app.route("/signup",methods=["POST"])
 #@app.route("/signup")
 def registration():
@@ -197,7 +198,8 @@ def registration():
         return jsonify({"u_id":uids,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos,"deptid":deptids,"dname":depts})
 
 #########################################################################################################################
-#Gets the id and username of all the faculties
+
+#Gets the fac_id and name of all the faculties
 @app.route("/list_all_fac",methods=["POST"])
 #@app.route("/list_all_fac")
 def listAllFacPage():
@@ -211,6 +213,9 @@ def listAllFacPage():
 
     return jsonify(response)
 
+#########################################################################################################################
+
+#Gets all the ids and names of the departments
 @app.route("/list_all_departments",methods=["POST"])
 #@app.route("/list_all_fac")
 def listAllDeptPage():
@@ -225,6 +230,7 @@ def listAllDeptPage():
     return jsonify(response)
 
 #########################################################################################################################
+
 #Gets details of a specific user
 @app.route("/details",methods=["POST"])
 #@app.route("/details")
@@ -241,7 +247,8 @@ def details():
         return jsonify(message="Invalid ID")
 
 #########################################################################################################################
-#insert into the appointment table
+
+#insert the appointment into the appointments DB and saves the state as 'pending'
 @app.route("/request_stud",methods=["POST"])
 #@app.route("/request_stud")
 def request_stud():
@@ -253,7 +260,7 @@ def request_stud():
     #title = "email test"
     #description = "email test des"
     #stud_id = "B190CS"
-    #fac_id = "666"
+    #fac_id = "667"
 
     date_created= request.json['date_created']
     date_appointment= request.json['date_appointment']
@@ -293,6 +300,7 @@ def request_stud():
     return jsonify(message="Appointment Requested")
 
 #########################################################################################################################
+
 #Gets details of an appointment
 @app.route("/get_appt",methods=["POST"])
 def get_appt():
@@ -317,7 +325,8 @@ def get_appt():
         return jsonify(message="Error: appointment doesn't exist")
 
 #########################################################################################################################
-#Deletes an appointment
+
+#Deletes an appointment from the DB
 @app.route("/delete_appt",methods=["DELETE"])
 #@app.route("/delete_appt")
 
@@ -337,7 +346,8 @@ def delete_appt():
         return jsonify(message="Error: appointment doesn't exist")
 
 #########################################################################################################################
-#Rejects an appointment
+
+#Rejects an appointment and saves the appointment state as 'rejected'
 @app.route("/reject_stud",methods=["POST"])
 def reject_stud():
     cursor=dbconn.cursor()
@@ -349,7 +359,8 @@ def reject_stud():
     return jsonify({"appt_id":appt_id,"status":2})
 
 #########################################################################################################################
-#Approves an appointment
+
+#Approves an appointment by saving the appt state as 'accepted'
 @app.route("/approval_stud",methods=["POST"])
 def approval_stud():
     cursor=dbconn.cursor()
@@ -366,7 +377,9 @@ def approval_stud():
         dbconn.commit()
     return jsonify({"appt_id":appt_id,"status":3})
 
-#Sends all appointments of student
+#########################################################################################################################
+
+#Sends all the appointments of a student
 @app.route("/view_all_student",methods=["POST"])
 #@app.route("/view_all")
 def view_all_student():
@@ -395,7 +408,8 @@ def view_all_student():
 
 
 ########################################  FACULTY STUFF  #########################################
-#Sends all appointments of faculty
+
+#Sends all appointments related to the faculty
 @app.route("/view_all_faculty",methods=["POST"])
 #@app.route("/view_all")
 def view_all_faculty():
@@ -423,7 +437,8 @@ def view_all_faculty():
     return jsonify(list_of_apt_details)
 
 #########################################################################################################################
-#api to reschedule an appointment
+
+#Reschedules an appointment by changing the appt state to 'rescheduled'
 #@app.route("/reschedule")
 @app.route("/reschedule", methods=["POST"])
 def reschedule():
@@ -461,7 +476,7 @@ def reschedule():
 
 ##################################################################################################
 
-#api to accept the appointment
+#api to accept the appointment by saving the appt state as 'accepted'
 @app.route("/accept",methods=["POST"])
 def accept():
     # takes in the appointment id
@@ -514,6 +529,7 @@ def accept():
 
 ##################################################################################################
 
+#List all the appointments related to a faculty in a particular month of a year
 @app.route("/apt_by_month",methods=["POST"])
 def apt_by_month():
     def getmonthlength(monthnum,yearnum):
@@ -568,7 +584,7 @@ def apt_by_month():
 
 ##################################################################################################
 
-#api to send all appointments of the faculty for the day
+#Sends all appointments of the faculty for the day
 
 @app.route("/apt_by_day",methods=["POST"])
 #@app.route("/apt_by_day")
@@ -602,6 +618,8 @@ def apt_by_day():
         #api to send all appointments of the faculty for the month
 
 ########################################  ADMIN STUFF  #########################################
+
+#Lists all the appointments in the database
 @app.route("/view_all",methods=["POST"])
 #@app.route("/view_all")
 def view_all():
@@ -638,7 +656,7 @@ def view_all():
 
 ##################################################################################################
 
-#delete the user account
+#Delete the user account
 @app.route("/delete_acc",methods=["DELETE"])
 #@app.route("/delete_acc")
 def delete_acc():
