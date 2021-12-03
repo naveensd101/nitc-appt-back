@@ -76,8 +76,7 @@ def signinpage():
     typess= request.json['type']
 
     #password encryption:
-    if typess!='admin':
-        password=hashlib.sha256(password.encode('utf-8')).hexdigest() #hashvalue
+    password=hashlib.sha256(password.encode('utf-8')).hexdigest() #hashvalue
 
     cursor.execute("SELECT pwd from Users where u_id=%s",(uids,))
     x=cursor.fetchone()
@@ -231,15 +230,22 @@ def listAllDeptPage():
 def details():
     cursor = dbconn.cursor()
     uid= request.json['u_id']
-    cursor.execute("SELECT * from Users where u_id=%s",(uid,))
+    cursor.execute("SELECT * FROM Users WHERE u_id=%s",(uid,))
     details=cursor.fetchone()
     dbconn.commit()
-    cursor = dbconn.cursor()
-    cursor.execute("SELECT deptid from Student where roll_no=%s",(uid,))
-    deptids= cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM Student WHERE roll_no=%s",(uid,))
+    isStudent=cursor.fetchone()[0]
     dbconn.commit()
-    cursor = dbconn.cursor()
-    cursor.execute("SELECT dname from Departments where department_id=%s",(deptids,))
+    if isStudent:
+        cursor.execute("SELECT deptid FROM Student WHERE roll_no=%s",(uid,))
+        deptids= cursor.fetchone()[0]
+        dbconn.commit()
+    else:
+        cursor.execute("SELECT deptid FROM Faculty WHERE ssn=%s",(uid,))
+        deptids= cursor.fetchone()[0]
+        dbconn.commit()
+    cursor.execute("SELECT dname FROM Departments WHERE department_id=%s",(deptids,))
     deptname= cursor.fetchone()[0]
     dbconn.commit()
     if details:
@@ -628,8 +634,9 @@ def apt_by_month():
     weekcount=0
     index=0
     length= getmonthlength(int(month),int(year));
+    print("monthlength: ",length)
     for daycount in range(length):
-        if daycount%7==0 and daycount!=0:
+        if (daycount%7==0 and daycount!=0):
             montharr.append(weekarr)
             weekarr=[]
             weekcount+=1
@@ -645,7 +652,11 @@ def apt_by_month():
 
         weekarr.append(dayarr)
         dayarr=[]
-    print(montharr)
+        if (daycount==length-1):
+            montharr.append(weekarr)
+            weekarr=[]
+            weekcount+=1
+    #print(montharr)
     #print(all_appts_of_month)
     return jsonify(montharr)
 
