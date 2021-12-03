@@ -81,7 +81,6 @@ def signinpage():
 
     if temp:
         passcode=temp
-        print(passcode,password)
         if passcode==password:
             if typess=='student':
                 cursor = dbconn.cursor()
@@ -135,7 +134,7 @@ def signinpage():
 #########################################################################################################################
 
 @app.route("/signup",methods=["POST"])
-# @app.route("/signup")
+#@app.route("/signup")
 def registration():
 
     cursor = dbconn.cursor()
@@ -147,13 +146,13 @@ def registration():
     depts= request.json['dname']
     typess= request.json['type']
 
-    # uids= 'B190SDtestCS'
-    # names= 'SDtestName'
-    # emails= 'SDtestName@gmail.com'
-    # password= 'SDtestPass'
-    # mobilenos= '1239991111'
-    # depts= 'CSE'
-    # typess= 'student'
+    #uids= '1234567'
+    #names= 'SDtestName'
+    #emails= 'SDtestName@gmail.com'
+    #password= 'SDtestPass'
+    #mobilenos= '1239991111'
+    #depts= 'CSE'
+    #typess= 'student'
 
     #password encryption:
     password=hashlib.sha256(password.encode('utf-8')).hexdigest() #hashvalue
@@ -193,7 +192,6 @@ def listAllFacPage():
     cursor.execute("SELECT u.u_id,u.uname FROM Users u, Faculty f WHERE u.u_id=f.ssn")
     list_of_uname=cursor.fetchall()
     response=list(map(lambda x: {"u_id":x[0],"uname":x[1]},list_of_uname))
-    print(response)
     dbconn.commit()
 
     return jsonify(response)
@@ -207,7 +205,6 @@ def listAllDeptPage():
     cursor.execute("SELECT department_id,dname from Departments")
     list_of_dname=cursor.fetchall()
     response=list(map(lambda x: {"dept_id":x[0],"dname":x[1]},list_of_dname))
-    print(response)
     dbconn.commit()
 
     return jsonify(response)
@@ -223,7 +220,6 @@ def details():
     details=cursor.fetchone()
     dbconn.commit()
     u_id,names,emails,password,mobilenos=details
-    print(details)
     return jsonify({"u_id":u_id,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos})
 
 #########################################################################################################################
@@ -269,12 +265,10 @@ def get_appt():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
     #appt_id='20'
-    print("appt_id",appt_id)
     valid=-1
     cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id,))
     valid=cursor.fetchone()
     dbconn.commit()
-    print("Valid=",valid)
     appointment_id,status,date_created,dateTime,title,decription,stu_id,fac_id,suggested_date,faculty_message = valid
     cursor.execute("SELECT uname FROM Users WHERE u_id=%s",(fac_id,))
     fac_name=cursor.fetchone()[0]
@@ -297,11 +291,9 @@ def delete_appt():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
     #appt_id='20'
-    print("appt_id",appt_id)
     valid=-1
     cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id,))
     valid=cursor.fetchone();
-    print("Valid=",valid)
     dbconn.commit()
     if valid:
         cursor.execute("DELETE from Appointments where appointment_id=%s",(appt_id,))
@@ -317,7 +309,6 @@ def reject_stud():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
     #appt_id='19'
-    print("appt_id",appt_id)
     dbconn.commit()
     cursor.execute("UPDATE Appointments SET status='2' where appointment_id=%s",(appt_id,))
     dbconn.commit()
@@ -330,7 +321,6 @@ def approval_stud():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
     # appt_id='19'
-    print("appt_id",appt_id)
     cursor.execute("UPDATE Appointments SET status='3' WHERE appointment_id=%s ;",(appt_id,))
     dbconn.commit()
     return jsonify({"appt_id":appt_id,"status":3})
@@ -345,7 +335,6 @@ def view_all_student():
     cursor.execute("SELECT * from Appointments where stu_id=%s ORDER by date_scheduled",(u_id,))
     list_of_apt=cursor.fetchall()
     dbconn.commit()
-    print(list_of_apt)
     if not list_of_apt:
         return jsonify(message2="There are no appointments")
 
@@ -375,7 +364,6 @@ def view_all_faculty():
     cursor.execute("SELECT * from Appointments where fac_id=%s ORDER by date_scheduled",(u_id,))
     list_of_apt=cursor.fetchall()
     dbconn.commit()
-    print(list_of_apt)
     if not list_of_apt:
         return jsonify(message2="There are no appointments")
 
@@ -528,7 +516,6 @@ def apt_by_month():
         dayarr=[]
 
     #print(all_appts_of_month)
-    print(montharr)
     return jsonify(montharr)
 
 ##################################################################################################
@@ -550,7 +537,6 @@ def apt_by_day():
 
     list_of_apt=cursor.fetchall()
     dbconn.commit()
-    print(list_of_apt)
     if not list_of_apt:
         return jsonify(message="There are no appointments")
 
@@ -582,7 +568,6 @@ def view_all():
     cursor.execute("SELECT * from Appointments ORDER by date_scheduled")
     list_of_apt=cursor.fetchall()
     dbconn.commit()
-    print(list_of_apt)
     if not list_of_apt:
         return jsonify(message2="There are no appointments")
 
@@ -600,6 +585,35 @@ def view_all():
         list_of_apt_details.append({"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "stu_name":stu_name,"fac_id": fac_id, "fac_name": fac_name, "suggested_date": suggested_date, "faculty_message": faculty_message})
     return jsonify(list_of_apt_details)
 
+##################################################################################################
 
+#delete the user account
+@app.route("/delete_acc",methods=["DELETE"])
+#@app.route("/delete_acc")
+def delete_acc():
+	 cursor=dbconn.cursor()
+	 uids=request.join["uid"]
+	 #uids='1234567'
+	 cursor.execute("SELECT COUNT(*) FROM Student where roll_no=%s",(uids,))
+	 valid=cursor.fetchone()[0];
+	 dbconn.commit()
+	 
+	 if valid:
+	 	cursor=dbconn.cursor()
+	 	cursor.execute("DELETE from Appointments where stu_id=%s",(uids,))
+	 	cursor.execute("DELETE from Student where roll_no=%s",(uids,))
+	 	cursor.execute("DELETE from Users where u_id=%s",(uids,))
+	 	dbconn.commit()
+	 	return jsonify(message="Deleted Student")
+	 
+	 else:
+	 	cursor=dbconn.cursor()
+	 	cursor.execute("DELETE from Appointments where fac_id=%s",(uids,))
+	 	cursor.execute("DELETE from Faculty where ssn=%s",(uids,))
+	 	cursor.execute("DELETE from Users where u_id=%s",(uids,))
+	 	dbconn.commit()
+	 	return jsonify(message="Deleted Faculty")
+	 		
+        
 if __name__ == '__main__':
 	app.run()
