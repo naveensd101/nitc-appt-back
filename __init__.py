@@ -362,19 +362,50 @@ def reject_stud():
 
 #Approves an appointment by saving the appt state as 'accepted'
 @app.route("/approval_stud",methods=["POST"])
+#@app.route("/approval_stud")
 def approval_stud():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
-    # appt_id='19'
-    cursor.execute("SELECT status FROM Appointments WHERE appointment_id=%s;",(appt_id,))
-    status=cursor.fetchone()[0]
+    #appt_id='10'
+    cursor.execute("SELECT status, stu_id, fac_id, title, suggested_date, date_scheduled, decription FROM Appointments WHERE appointment_id=%s;",(appt_id,))
+    status, stu_id, fac_id, title, dateTime, dateTime2, description=cursor.fetchone()
+    dbconn.commit()
+    #print(dateTime, dateTime2)
+    if status=="4" and dateTime!='-1':
+        date_appointment,time_appointment = dateTime.split("#")
+    else:
+        date_appointment,time_appointment = dateTime2.split("#")
+    #print(status, stu_id, fac_id)
+
+    #get the email of the student and faculty
+    cursor.execute("SELECT email, uname from Users where u_id=%s",(stu_id,))
+    stu_email, stu_name=cursor.fetchone()
+    dbconn.commit()
+    cursor.execute("SELECT email, uname from Users where u_id=%s",(fac_id,))
+    fac_email, fac_name=cursor.fetchone()
+    #print(fac_email, fac_name)
     dbconn.commit()
     if (status=="4"):
+        # we are here means the faculty asked for a reschedule
+        # and student is approving the reschedule
         cursor.execute("UPDATE Appointments SET status='3', date_scheduled=suggested_date, suggested_date=-1,faculty_message=NULL WHERE appointment_id=%s;",(appt_id,))
         dbconn.commit()
+
+        #send email to the faculty that the student has approved the reschedule
+        msg = Message(f'{stu_name} : {title}', sender = 'nitc.email.bot@gmail.com', recipients = [f'{fac_email}'])
+        #msg = Message(f'{stu_name} : {title}', sender = 'nitc.email.bot@gmail.com', recipients = ['naveen_b190707cs@nitc.ac.in'])
+        msg.body = f'{stu_name} has approved the reschedule request for the appointment.\n\nTitle: {title}\nDescription: {description}\nDate: {date_appointment}\nTime: {time_appointment}\n\nPlease login to the portal to accept or reject the request.'
+        mail.send(msg)
     else:
         cursor.execute("UPDATE Appointments SET status='3' WHERE appointment_id=%s ;",(appt_id,))
         dbconn.commit()
+
+        #send email to the student that the appointment has been approved
+        msg = Message(f'{fac_name} : {title}', sender = 'nitc.email.bot@gmail.com', recipients = [f'{stu_email}'])
+        #msg = Message(f'{fac_name} : {title}', sender = 'nitc.email.bot@gmail.com', recipients = ['naveen_b190707cs@nitc.ac.in'])
+        msg.body = f'{fac_name} has approved the appointment request for you.\n\nTitle: {title}\nDescription: {description}\nDate: {date_appointment}\nTime: {time_appointment}\n\nPlease login to the portal to accept or reject the request.'
+        mail.send(msg)
+
     return jsonify({"appt_id":appt_id,"status":3})
 
 #########################################################################################################################
