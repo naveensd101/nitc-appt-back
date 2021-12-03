@@ -219,8 +219,11 @@ def details():
     cursor.execute("SELECT * from Users where u_id=%s",(uid,))
     details=cursor.fetchone()
     dbconn.commit()
-    u_id,names,emails,password,mobilenos=details
-    return jsonify({"u_id":u_id,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos})
+    if details:
+        u_id,names,emails,password,mobilenos=details
+        return jsonify({"u_id":u_id,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos})
+    else:
+        return jsonify(message="Invalid ID")
 
 #########################################################################################################################
 #insert into the appointment table
@@ -316,13 +319,20 @@ def reject_stud():
 
 #########################################################################################################################
 #Approves an appointment
-@app.route("/approval_stud")
+@app.route("/approval_stud",methods=["POST"])
 def approval_stud():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
     # appt_id='19'
-    cursor.execute("UPDATE Appointments SET status='3' WHERE appointment_id=%s ;",(appt_id,))
+    cursor.execute("SELECT status FROM Appointments WHERE appointment_id=%s;",(appt_id,))
+    status=cursor.fetchone()[0]
     dbconn.commit()
+    if (status=="4"):
+        cursor.execute("UPDATE Appointments SET status='3', date_scheduled=suggested_date, suggested_date=-1,faculty_message=NULL WHERE appointment_id=%s;",(appt_id,))
+        dbconn.commit()
+    else:
+        cursor.execute("UPDATE Appointments SET status='3' WHERE appointment_id=%s ;",(appt_id,))
+        dbconn.commit()
     return jsonify({"appt_id":appt_id,"status":3})
 
 #Sends all appointments of student
@@ -494,8 +504,10 @@ def apt_by_month():
     fac_id=request.json["fac_id"]
     month=request.json["month"]
     year=request.json["year"]
-    cursor.execute("SELECT * FROM Appointments WHERE fac_id=%s AND status='3' AND date_scheduled LIKE '%s-%s-__#__:__:__' ORDER BY date_scheduled",(fac_id,AsIs(year),AsIs(month)))
+    perc='%'
+    cursor.execute("SELECT * FROM Appointments WHERE fac_id=%s AND status='3' AND date_scheduled LIKE '%s-%s-%s' ORDER BY date_scheduled",(fac_id,AsIs(year),AsIs(month),AsIs(perc)))
     all_appts_of_month=cursor.fetchall()
+    dbconn.commit()
     weekarr=[]
     montharr=[]
     dayarr=[]
@@ -509,12 +521,17 @@ def apt_by_month():
             weekcount+=1
 
         while index<len(all_appts_of_month) and int(daycount+1)==int(all_appts_of_month[index][3][8:10]):
-            dayarr.append(all_appts_of_month[index])
+            appointment_id,status,date_created,dateTime,title,decription,stu_id,fac_id,suggested_date,faculty_message = all_appts_of_month[index]
+            cursor.execute("SELECT uname FROM Users WHERE u_id=%s",(stu_id,))
+            stu_name=cursor.fetchone()[0]
+            dbconn.commit()
+            date_scheduled,time_scheduled = dateTime.split("#") 
+            dayarr.append({"appointment_id":appointment_id,"status":status,"date_created":date_created,"date_scheduled":date_scheduled,"time_scheduled":time_scheduled,"title":title,"decription":decription,"suggested_date":suggested_date,"faculty_message":faculty_message,"stu_name":stu_name})
             index+=1
 
         weekarr.append(dayarr)
         dayarr=[]
-
+    print(montharr)
     #print(all_appts_of_month)
     return jsonify(montharr)
 
@@ -545,7 +562,10 @@ def apt_by_day():
         aptId, status, date_created, dateTime, title, description, stu_id, fac_id, suggested_date, faculty_message = i
         date_scheduled = dateTime.split("#")[0]
         time_scheduled = dateTime.split("#")[1]
-        list_of_apt_details.append({"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message})
+        cursor.execute("SELECT uname FROM Users WHERE u_id=%s",(stu_id,))
+        stu_name=cursor.fetchone()
+        dbconn.commit()
+        list_of_apt_details.append({"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id,"stu_name": stu_name, "suggested_date": suggested_date, "faculty_message": faculty_message})
     return jsonify(list_of_apt_details)
 
         #api to send all appointments of the faculty for the month
@@ -592,7 +612,7 @@ def view_all():
 #@app.route("/delete_acc")
 def delete_acc():
      cursor=dbconn.cursor()
-     uids=request.join["uid"]
+     uids=request.json["uid"]
      #uids='1234567'
      cursor.execute("SELECT COUNT(*) FROM Student where roll_no=%s",(uids,))
      valid=cursor.fetchone()[0];
