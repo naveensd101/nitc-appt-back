@@ -2,6 +2,8 @@ import psycopg2
 from psycopg2.extensions import AsIs
 import urllib.parse as up
 
+from flask_mail import Mail, Message
+
 from flask import Flask,request
 from flask import jsonify
 from flask_cors import CORS,cross_origin
@@ -47,9 +49,22 @@ cursor.execute("SELECT * from Appointments")
 print(cursor.fetchall())
 dbconn.commit() """
 
+mail = Mail(app)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = 'nitc.email.bot@gmail.com'
+app.config['MAIL_PASSWORD'] = 'EMBySGxAcR9xsgV'
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+mail = Mail(app)
+
+
 @app.route("/")
 def index():
-    response = jsonify(message="The server is running")
+    msg = Message('Hello from falsk', sender = 'nitc.email.bot@gmail.com', recipients = ['naveen_b190707cs@nitc.ac.in'])
+    msg.body = "Hello Flask message sent from Flask-Mail"
+    mail.send(msg)
+    response = jsonify(message="The server is running and mail is send")
     return response
 
 #########################################################################################################################
@@ -228,16 +243,17 @@ def details():
 #########################################################################################################################
 #insert into the appointment table
 @app.route("/request_stud",methods=["POST"])
+#@app.route("/request_stud")
 def request_stud():
     cursor = dbconn.cursor()
 
-    #date_created = "2020-12-30"
+    #date_created = "2020-12-03"
     #date_appointment = "2020-12-31"
     #time_appointment = "10:00:00"
-    #title = "test3"
-    #description = "3rd exam description"
-    #stud_id = "B190SDtestCS"
-    #fac_id = "123"
+    #title = "email test"
+    #description = "email test des"
+    #stud_id = "B190CS"
+    #fac_id = "666"
 
     date_created= request.json['date_created']
     date_appointment= request.json['date_appointment']
@@ -255,9 +271,24 @@ def request_stud():
     #status will be 1 for pending
     try:
         cursor.execute("INSERT INTO Appointments (status, date_created, date_scheduled, title, decription, stu_id, fac_id) VALUES(%s, %s, %s, %s, %s, %s, %s)",("1", date_created, dateTime, title, description, stud_id, fac_id))
+        dbconn.commit()
+
     except:
         return jsonify(message="Invalid appointment request")
+
+    #sending email to the faculty
+    cursor.execute("SELECT email from Users where u_id=%s",(fac_id,))
+    email=cursor.fetchone()[0]
     dbconn.commit()
+
+    cursor.execute("SELECT uname from Users where u_id=%s",(stud_id,))
+    stud_name=cursor.fetchone()[0]
+    dbconn.commit()
+
+    msg = Message(f'{stud_name} : {title}', sender = 'nitc.email.bot@gmail.com', recipients = [f'{email}'])
+    msg.body = f'{stud_name} has requested an appointment with you.\n\nTitle: {title}\nDescription: {description}\nDate: {date_appointment}\nTime: {time_appointment}\n\nPlease login to the portal to accept or reject the request.'
+    mail.send(msg)
+
 
     return jsonify(message="Appointment Requested")
 
