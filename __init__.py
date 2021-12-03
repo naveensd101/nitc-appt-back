@@ -240,9 +240,17 @@ def details():
     cursor.execute("SELECT * from Users where u_id=%s",(uid,))
     details=cursor.fetchone()
     dbconn.commit()
+    cursor = dbconn.cursor()
+    cursor.execute("SELECT deptid from Student where roll_no=%s",(uid,))
+    deptids= cursor.fetchone()[0]
+    dbconn.commit()
+    cursor = dbconn.cursor()
+    cursor.execute("SELECT dname from Departments where department_id=%s",(deptids,))
+    deptname= cursor.fetchone()[0]
+    dbconn.commit()
     if details:
         u_id,names,emails,password,mobilenos=details
-        return jsonify({"u_id":u_id,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos})
+        return jsonify({"u_id":u_id,"uname":names,"email":emails,"pwd":password,"mobileno":mobilenos,"dname":deptname})
     else:
         return jsonify(message="Invalid ID")
 
