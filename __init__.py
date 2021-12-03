@@ -505,6 +505,15 @@ def reschedule():
         date_scheduled = dateTime.split("#")[0]
         time_scheduled = dateTime.split("#")[1]
         resc_apt={"aptId": aptId, "status": status, "date_created": date_created, "date_scheduled": date_scheduled, "time_scheduled": time_scheduled, "title": title, "description": description, "stu_id": stu_id, "fac_id": fac_id, "suggested_date": suggested_date, "faculty_message": faculty_message}
+        cursor.execute("SELECT uname from Users where u_id=%s;",(fac_id,))
+        fac_name=cursor.fetchone()[0]
+        dbconn.commit()
+        cursor.execute("SELECT email from Users where u_id=%s;",(stu_id,))
+        stu_email=cursor.fetchone()[0]
+        dbconn.commit()
+        msg = Message(f'{fac_name} : {title}', sender = 'nitc.email.bot@gmail.com', recipients = [f'{stu_email}'])
+        msg.body = f'{fac_name} has asked to reschedule your request for an appointment.\n\nTitle: {title}\nDescription: {description}\nOld date: {date_scheduled}\nOld time: {time_scheduled}\nto-\nNew date: {suggested_date}\nNew time: {suggested_time}\nFaculty message: {faculty_message}\n\nPlease login to the portal to accept or reject the suggestion.'
+        mail.send(msg)
     return jsonify(resc_apt)
 
 ##################################################################################################
