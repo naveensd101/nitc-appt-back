@@ -351,13 +351,38 @@ def delete_appt():
 
 #Rejects an appointment and saves the appointment state as 'rejected'
 @app.route("/reject_stud",methods=["POST"])
+#@app.route("/reject_stud")
 def reject_stud():
     cursor=dbconn.cursor()
     appt_id=request.json["appt_id"]
     #appt_id='19'
+    cursor.execute("SELECT * FROM Appointments where appointment_id=%s",(appt_id,))
+    appointment_id, status, date_created, dateTime, title, decription, stu_id, fac_id, suggested_date, faculty_message = cursor.fetchone()
     dbconn.commit()
     cursor.execute("UPDATE Appointments SET status='2' where appointment_id=%s",(appt_id,))
     dbconn.commit()
+    date_scheduled,time_scheduled = dateTime.split("#")
+
+    #get the email, name of the student and faculty
+    cursor.execute("SELECT email, uname from Users where u_id=%s",(fac_id,))
+    fac_email, fac_name=cursor.fetchone()
+    dbconn.commit()
+    cursor.execute("SELECT email, uname from Users where u_id=%s",(stu_id,))
+    stu_email, stu_name=cursor.fetchone()
+    dbconn.commit()
+
+
+    if status == '1':
+        #send a mail to the student with the message that the appointment has been rejected
+        msg = Message(f'{fac_name} : {title}', sender = 'nitc.email.bot@gmail.com', recipients = [f'{stu_email}'])
+        msg.body = f'Your appointment with {fac_name} has been rejected.\n\nTitle: {title}\nDescription: {decription}\nDate: {date_scheduled}\nTime: {time_scheduled}\n\nPlease login to the portal to make another appointment.'
+        mail.send(msg)
+    else:
+        #send a mail to the faculty with the message that the appointment has been rejected
+        msg = Message(f'{stu_name} : {title}', sender = 'nitc.email.bot@gmail.com', recipients = [f'{fac_email}'])
+        #msg.body = f'Your appointment with {stu_name} has been rejected.\n\nTitle: {title}\nDescription: {decription}\nDate: {dateTime}\n\nPlease login to the portal to make another appointment.'
+        msg.body = f'Your appointment with {stu_name} has been rejected.\n\nTitle: {title}\nDescription: {decription}\nDate: {date_scheduled}\nTime: {time_scheduled}\n\nPlease login to the portal to make another appointment.'
+        mail.send(msg)
     return jsonify({"appt_id":appt_id,"status":2})
 
 #########################################################################################################################
